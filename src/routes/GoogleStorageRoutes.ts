@@ -1,18 +1,16 @@
 import { Request, Response, Router } from 'express';
-import googleStorageController from '../controllers/GoogleStorageController';
-import authenticateToken from '../middlewares/middleware';
 import multer from 'multer';
+import googleStorageController from '../controllers/GoogleStorageController';
 
-const taskRoutes = Router()
+const gcsRoutes = Router()
 
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
+const upload = multer({ storage: multer.memoryStorage() });
 
-taskRoutes.post('/file/upload', authenticateToken, upload.single('file'), (req: Request, res: Response) => {
+gcsRoutes.post('/file/upload/:userId', upload.single('file'), async (req: Request, res: Response) => {
     if (!req.file) {
-        res.status(400).json({ error: 'Arquivo não enviado' });
+        res.status(400).json({ error: 'File not found' });
     }
     googleStorageController.uploadFile(req, res)
 });
 
-export default taskRoutes;
+export default gcsRoutes;

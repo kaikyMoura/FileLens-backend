@@ -11,14 +11,19 @@ class GoogleStorageService {
 
         try {
 
+            console.log(file)
+
             if (!file) {
                 throw new Error("REQUIRED_PROPERTIES_MISSING")
             }
 
-            if(!await userService.retriveUserById(file.userId)) {
+            const retrievedUser = await userService.retriveUserById(file.userId)
+
+            console.log(retrievedUser)
+
+            if(!retrievedUser) {
                 throw new Error("USER_NOT_FOUND")
             }
-
 
             const fileName = file.generateUniqueFileName()
 
@@ -37,8 +42,6 @@ class GoogleStorageService {
                 metadata: {
                     cacheControl: 'public, max-age=31536000',
                 },
-            }).catch((err) => {
-                throw new Error("FILE_UPLOAD_ERROR", err)
             })
 
             // image_url: `https://storage.googleapis.com/${bucketName}/${fileName}`,

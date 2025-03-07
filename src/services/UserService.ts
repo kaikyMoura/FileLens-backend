@@ -14,7 +14,7 @@ class UserService {
                 throw new Error("REQUIRED_PROPERTIES_MISSING")
             }
 
-            const retrivedUser = await userRepository.findUniqueByEmail(userId)
+            const retrivedUser = await userRepository.findUnique(userId)
 
             if (!retrivedUser) {
                 throw new Error("USER_NOT_FOUND")

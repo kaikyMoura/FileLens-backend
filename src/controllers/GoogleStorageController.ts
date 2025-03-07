@@ -7,8 +7,8 @@ class GoogleStorageController {
 
     async uploadFile(req: Request, res: Response): Promise<any> {
         const { buffer, mimetype, originalname } = req.file!;
-        const userId = req.params.userId;
-        
+        const { userId } = req.params;
+
         try {
 
             const fileLensUpload = new FileLensUpload(userId, buffer, mimetype, originalname);
@@ -18,7 +18,6 @@ class GoogleStorageController {
             return res.status(200).json(response)
                }
                catch (err) {
-                   console.error(err)
                    if (err === "REQUIRED_PROPERTIES_MISSING") {
                        throw catchErrorResponse(res, 400, "REQUIRED_PROPERTIES_MISSING", "Missing required properties", "Some required properties are missing from the request.")
                    }

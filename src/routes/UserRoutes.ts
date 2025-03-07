@@ -2,12 +2,8 @@ import { Router } from "express";
 import userController from "../controllers/UserController";
 import authenticateToken from "../middlewares/middleware";
 
-//const storage = multer.memoryStorage();
-//const upload = multer({ storage });
-
 const userRoutes = Router()
 
-//upload.single('file')
 userRoutes.post('/user/create', (req, res) => {
     userController.createUser(req, res)
 });
