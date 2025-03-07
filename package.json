@@ -1,0 +1,53 @@
+{
+  "name": "tasks_service",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/app.ts",
+  "scripts": {
+    "build": "cross-env NODE_ENV=prod dotenv -e .env prisma migrate deploy && prisma generate && tsc",
+    "start": "ts-node bin/www.ts",
+    "dev": "cross-env NODE_ENV=dev dotenv -e .env.development prisma generate && nodemon bin/www.ts",
+    "test": "cross-env NODE_ENV=test dotenv -e .env.test jest -i"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/debug": "^4.1.12",
+    "@types/express": "^5.0.0",
+    "@types/jest": "^29.5.14",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/morgan": "^1.9.9",
+    "@types/multer": "^1.4.12",
+    "@types/node": "^22.13.9",
+    "@types/sqlite3": "^5.1.0",
+    "@types/supertest": "^6.0.2",
+    "@types/uuid": "^10.0.0",
+    "dotenv-cli": "^8.0.0",
+    "jest": "^29.7.0",
+    "prisma": "^6.4.1",
+    "supertest": "^7.0.0",
+    "ts-jest": "^29.2.6",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@google-cloud/storage": "^7.15.2",
+    "@google/generative-ai": "^0.24.0",
+    "@prisma/client": "^6.4.1",
+    "bcryptjs": "^3.0.2",
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.7",
+    "express": "^5.0.1",
+    "http-errors": "~2.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "morgan": "^1.10.0",
+    "multer": "1.4.5-lts.1",
+    "nodemon": "^3.1.9",
+    "sqlite3": "^5.1.7",
+    "typescript": "^5.8.2",
+    "uuid": "^11.1.0"
+  }
+}
