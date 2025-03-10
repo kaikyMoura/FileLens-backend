@@ -6,8 +6,8 @@ export default class FileLensUpload {
     mimetype: string;
     originalFileName: string;
 
-    constructor(userId: string, buffer: Buffer, mimetype: string, originalFileName: string) {
-        this.userId = userId;
+    constructor(userId: string | undefined, buffer: Buffer, mimetype: string, originalFileName: string) {
+        this.userId = userId!;
         this.buffer = buffer;
         this.mimetype = mimetype;
         this.originalFileName = originalFileName;

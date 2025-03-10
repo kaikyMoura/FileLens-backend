@@ -1,21 +1,17 @@
-import { catchErrorResponse } from "../exception/CatchErrorResponse";
-import FileLensUpload from "../model/FileLensUpload"
-import googleStorageService from "../services/GoogleStorageService"
-import { Request, Response } from 'express';
+import { Request, Response } from 'express'
+import gemmAiService from '../services/GemmApiService'
+import { catchErrorResponse } from '../exception/CatchErrorResponse'
+import FileLensUpload from '../model/FileLensUpload';
 
-class GoogleStorageController {
+class GemmApiController {
 
-    async uploadFile(req: Request, res: Response): Promise<Response> {
+    async extractData(req: Request, res: Response): Promise<Response> {
         const { buffer, mimetype, originalname } = req.file!;
-        const { userId } = req.params;
 
         try {
+            const data = await gemmAiService.extractDataFromFile(new FileLensUpload(undefined, buffer, mimetype, originalname))
 
-            const fileLensUpload = new FileLensUpload(userId, buffer, mimetype, originalname);
-
-            const response = await googleStorageService.uploadFileToGCS(fileLensUpload)
-
-            return res.status(200).json(response)
+            return res.status(200).json(data)
         }
         catch (err) {
             if (err === "REQUIRED_PROPERTIES_MISSING") {
@@ -33,7 +29,6 @@ class GoogleStorageController {
             }
         }
     }
-
 }
 
-export default new GoogleStorageController()
+export default new GemmApiController()

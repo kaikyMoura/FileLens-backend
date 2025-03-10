@@ -1,7 +1,7 @@
 import express, { Request, Response } from 'express';
 import logger from 'morgan';
 import path from 'path';
-import taskRoutes from './routes/GoogleStorageRoutes';
+import fileRoutes from './routes/FileRoutes';
 import userRoutes from './routes/UserRoutes';
 import cors from 'cors';
 
@@ -27,7 +27,7 @@ app.get("/", (req: Request, res: Response) => {
 });
 
 app.use(userRoutes)
-app.use(taskRoutes)
+app.use(fileRoutes)
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
