@@ -1,4 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
 
 export default class FileLensUpload {
     userId: string;
@@ -14,6 +13,6 @@ export default class FileLensUpload {
     }
 
     generateUniqueFileName(): string {
-        return `user-${this.userId}/${uuidv4()}-${this.originalFileName}`;
+        return `user-${this.userId}/${this.originalFileName}`;
     }
 }

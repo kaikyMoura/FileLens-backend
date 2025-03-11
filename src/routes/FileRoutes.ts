@@ -1,8 +1,6 @@
 import { Request, Response, Router } from 'express';
 import multer from 'multer';
-import googleStorageController from '../controllers/GoogleStorageController';
-import gemmApiController from '../controllers/GemmApiController';
-import authenticateToken from '../middlewares/middleware';
+import fileController from '../controllers/FileController';
 
 const fileRoutes = Router()
 
@@ -12,14 +10,25 @@ fileRoutes.post('/file/upload/:userId', upload.single('file'), async (req: Reque
     if (!req.file) {
         res.status(400).json({ error: 'File not found' });
     }
-    googleStorageController.uploadFile(req, res)
+    fileController.uploadFile(req, res)
 });
 
-fileRoutes.post('/file/extract-data/', upload.single('file'), async (req: Request, res: Response) => {
+fileRoutes.post('/file/extract-data', upload.single('file'), async (req: Request, res: Response) => {
     if (!req.file) {
         res.status(400).json({ error: 'File not found' });
     }
-    gemmApiController.extractData(req, res)
+    fileController.extractData(req, res)
 })
+
+fileRoutes.get('/file/user/:userId', async (req: Request, res: Response) => {
+    fileController.retriveUserFiles(req, res)
+})
+
+// fileRoutes.post('/file/convert', upload.single('file'), async (req: Request, res: Response) => {
+//     if (!req.file) {
+//         res.status(400).json({ error: 'File not found' });
+//     }
+//     fileController.fileConvertion(req, res)
+// })
 
 export default fileRoutes;
