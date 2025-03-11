@@ -6,6 +6,10 @@ const fileRoutes = Router()
 
 const upload = multer({ storage: multer.memoryStorage() });
 
+fileRoutes.get('/file/user/:userId', async (req: Request, res: Response) => {
+    fileController.retriveUserFiles(req, res)
+})
+
 fileRoutes.post('/file/upload/:userId', upload.single('file'), async (req: Request, res: Response) => {
     if (!req.file) {
         res.status(400).json({ error: 'File not found' });
@@ -20,15 +24,11 @@ fileRoutes.post('/file/extract-data', upload.single('file'), async (req: Request
     fileController.extractData(req, res)
 })
 
-fileRoutes.get('/file/user/:userId', async (req: Request, res: Response) => {
-    fileController.retriveUserFiles(req, res)
+fileRoutes.post('/file/convert', upload.single('file'), async (req: Request, res: Response) => {
+    if (!req.file) {
+        res.status(400).json({ error: 'File not found' });
+    }
+    fileController.convertFile(req, res)
 })
-
-// fileRoutes.post('/file/convert', upload.single('file'), async (req: Request, res: Response) => {
-//     if (!req.file) {
-//         res.status(400).json({ error: 'File not found' });
-//     }
-//     fileController.fileConvertion(req, res)
-// })
 
 export default fileRoutes;

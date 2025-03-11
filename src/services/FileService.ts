@@ -1,21 +1,17 @@
-import { File, GetSignedUrlConfig, Storage } from '@google-cloud/storage';
-import FileLensUpload from '../model/FileLensUpload'
-import userService from './UserService'
+import { GetSignedUrlConfig, Storage } from '@google-cloud/storage';
+import FileLensUpload from '../model/FileLensUpload';
 import { ResponseModel } from '../model/ResponseModel';
+import userService from './UserService';
 import { generateDocx } from '../utils/generateFile';
-import gemmAiService from './GemmApiService'
+import gemmApiService from './GemmApiService';
 
-interface FileConversionResponseModel {
-    buffer: Buffer;
-    fileName: string;
-    mimeType: string;
-}
+
 
 class FileService {
 
     private storage = new Storage({ keyFilename: process.env.GOOGLE_APLICATION_CREDENTIALS });
     private bucketName = "filelens_bucket"
-    
+
     async uploadFileToGCS(file: FileLensUpload): Promise<ResponseModel<string>> {
         try {
 
@@ -115,6 +111,106 @@ class FileService {
         }
         catch (e) {
             return false
+        }
+    }
+
+    async generateFileFromText(type: string, text: string, fileTitle?: string) {
+        try {
+            if (!text || !type) {
+                throw new Error("REQUIRED_PROPERTIES_MISSING")
+            }
+
+            let fileBuffer: Buffer | undefined;
+            let fileName: string;
+            let mimeType: string;
+
+            if (type === ".docx") {
+                fileBuffer = await generateDocx(text)
+                fileName = fileTitle ? `${fileTitle}` : "generated_file.docx";
+                mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            }
+
+            else if (type === '.pdf') {
+                //fileBuffer = await generatePdfBuffer(text);
+                fileName = fileTitle ? `${fileTitle}` : "generated_file.pdf";
+                mimeType = 'application/pdf';
+            }
+            else {
+                throw new Error("INVALID_TYPE")
+            }
+
+
+            console.log(fileBuffer)
+
+            return {
+                data: {
+                    buffer: fileBuffer!,
+                    fileName: fileName,
+                    mimeType: mimeType
+
+                }
+            }
+        }
+        catch (err) {
+            if (err instanceof Error) {
+                throw new Error(err.message)
+            }
+            else {
+                throw new Error("INTERNAL_SERVER_ERROR")
+            }
+        }
+    }
+
+    async generateFileFromData(file: FileLensUpload, type: string) {
+        try {
+            if (!file || !type) {
+                throw new Error("REQUIRED_PROPERTIES_MISSING")
+            }
+
+            if (file.mimetype === type) {
+                throw new Error("DUPLICATED_MIMETYPE")
+            }
+
+            const result = await gemmApiService.extractDataFromFile(file)
+
+            let fileBuffer: Buffer | undefined;
+            let fileName: string;
+            let mimeType: string;
+
+            if (type === ".docx") {
+                fileBuffer = await generateDocx(result.data!)
+                fileName = `${file.originalFileName.replace('.pdf', '.docx')}`;
+                mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            }
+
+            else if (type === 'pdf') {
+                //fileBuffer = await generatePdfBuffer(text);
+                fileName = `${file.originalFileName.replace('.docx', 'pdf')}`;
+                mimeType = 'application/pdf';
+            }
+            else {
+                throw new Error("INVALID_TYPE")
+            }
+
+
+            console.log(fileBuffer)
+
+            return {
+                data: {
+                    buffer: fileBuffer!,
+                    fileName: fileName,
+                    mimeType: mimeType
+
+                }
+            }
+        }
+        catch (err) {
+            if (err instanceof Error) {
+                throw new Error(err.message)
+            }
+            else {
+                throw new Error("INTERNAL_SERVER_ERROR")
+            }
         }
     }
 }
