@@ -7,7 +7,7 @@ import { convertTo } from './../utils/fileUtils';
 
 class GemmApiController {
 
-    async extractData(req: Request, res: Response): Promise<Response> {
+    async extractDataFromFile(req: Request, res: Response): Promise<Response> {
         const { buffer, mimetype, originalname } = req.file!;
 
         try {
@@ -43,6 +43,64 @@ class GemmApiController {
             res.setHeader('Content-Type', data.mimeType);
 
             return res.status(200).send(data.buffer);
+        } catch (err) {
+            if (err === "REQUIRED_PROPERTIES_MISSING") {
+                throw catchErrorResponse(res, 400, "REQUIRED_PROPERTIES_MISSING", "Missing required properties", "Some required properties are missing from the request.");
+            }
+
+            if (err === "DUPLICATED_MIMETYPE") {
+                throw catchErrorResponse(res, 404, "DUPLICATED_MIMETYPE", "Duplicated mymetype", "Cannot convert files from the same type");
+            }
+
+            if (err === "INVALID_TYPE") {
+                throw catchErrorResponse(res, 400, "INVALID_TYPE", "An Error occurred during the file upload process. Details: ", err);
+            }
+
+            throw catchErrorResponse(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error", "An error occurred while processing the operation. Please try again or contact support if the issue persists.");
+        }
+    }
+
+    async generateFileFromText(req: Request, res: Response): Promise<Response> {
+        const { type, text, fileTitle } = req.body
+
+        console.log(req.body)
+
+        try {
+            const result = await fileService.generateFileFromText(type, text, fileTitle)
+
+            res.setHeader('Content-Disposition', `attachment; filename="${result!.data.fileName}"`);
+            res.setHeader('Content-Type', result!.data.mimeType);
+
+            return res.status(200).send(result!.data.buffer);
+        } catch (err) {
+            if (err === "REQUIRED_PROPERTIES_MISSING") {
+                throw catchErrorResponse(res, 400, "REQUIRED_PROPERTIES_MISSING", "Missing required properties", "Some required properties are missing from the request.");
+            }
+
+            if (err === "DUPLICATED_MIMETYPE") {
+                throw catchErrorResponse(res, 404, "DUPLICATED_MIMETYPE", "Duplicated mymetype", "Cannot convert files from the same type");
+            }
+
+            if (err === "INVALID_TYPE") {
+                throw catchErrorResponse(res, 400, "INVALID_TYPE", "An Error occurred during the file upload process. Details: ", err);
+            }
+
+            throw catchErrorResponse(res, 500, "INTERNAL_SERVER_ERROR", "Internal server error", "An error occurred while processing the operation. Please try again or contact support if the issue persists.");
+        }
+    }
+
+
+    async generateFileFromData(req: Request, res: Response): Promise<Response> {
+        const { buffer, mimetype, originalname } = req.file!
+        const { type, userId } = req.body
+
+        try {
+            const result = await fileService.generateFileFromFileData(new FileLensUpload(userId, buffer, mimetype, originalname), type)
+
+            res.setHeader('Content-Disposition', `attachment; filename="${result!.data.fileName}"`);
+            res.setHeader('Content-Type', result!.data.mimeType);
+
+            return res.status(200).send(result!.data.buffer);
         } catch (err) {
             if (err === "REQUIRED_PROPERTIES_MISSING") {
                 throw catchErrorResponse(res, 400, "REQUIRED_PROPERTIES_MISSING", "Missing required properties", "Some required properties are missing from the request.");

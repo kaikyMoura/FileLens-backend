@@ -2,7 +2,7 @@ import { GetSignedUrlConfig, Storage } from '@google-cloud/storage';
 import FileLensUpload from '../model/FileLensUpload';
 import { ResponseModel } from '../model/ResponseModel';
 import userService from './UserService';
-import { generateDocx } from '../utils/generateFile';
+import { createPdfFromText, createDocxFromText } from '../utils/generateFile';
 import gemmApiService from './GemmApiService';
 
 
@@ -125,13 +125,13 @@ class FileService {
             let mimeType: string;
 
             if (type === ".docx") {
-                fileBuffer = await generateDocx(text)
+                fileBuffer = await createDocxFromText(text)
                 fileName = fileTitle ? `${fileTitle}` : "generated_file.docx";
                 mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
             }
 
             else if (type === '.pdf') {
-                //fileBuffer = await generatePdfBuffer(text);
+                fileBuffer = await createPdfFromText(text);
                 fileName = fileTitle ? `${fileTitle}` : "generated_file.pdf";
                 mimeType = 'application/pdf';
             }
@@ -161,7 +161,10 @@ class FileService {
         }
     }
 
-    async generateFileFromData(file: FileLensUpload, type: string) {
+    async generateFileFromFileData(file: FileLensUpload, type: string) {
+
+        console.log(file)
+
         try {
             if (!file || !type) {
                 throw new Error("REQUIRED_PROPERTIES_MISSING")
@@ -178,13 +181,14 @@ class FileService {
             let mimeType: string;
 
             if (type === ".docx") {
-                fileBuffer = await generateDocx(result.data!)
+                fileBuffer = await createDocxFromText(result.data!)
                 fileName = `${file.originalFileName.replace('.pdf', '.docx')}`;
                 mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
             }
 
             else if (type === 'pdf') {
-                //fileBuffer = await generatePdfBuffer(text);
+                console.log('aqui')
+                fileBuffer = await createPdfFromText(result.data!);
                 fileName = `${file.originalFileName.replace('.docx', 'pdf')}`;
                 mimeType = 'application/pdf';
             }

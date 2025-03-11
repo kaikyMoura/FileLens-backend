@@ -7,14 +7,14 @@ type FileType = "pdf" | "pptx" | "png" | "jpg" | "svg" | "xlsx" | "csv" | "html"
 
 const convertapi = new ConvertAPI(process.env.CONVERT_API_KEY!, { conversionTimeout: 60 });
 
-export const convertTo = async (to: FileType, file: FileLensUpload): Promise<{
+export async function convertTo(to: FileType, file: FileLensUpload): Promise<{
     buffer: Buffer;
     fileName: string;
     mimeType: string;
-}> => {
+}> {
     const tempDir = path.join(__dirname, "temp");
     const outputDir = path.join(tempDir, "converted");
-    
+
     const inputFilePath = path.join(tempDir, file.originalFileName);
     const outputFileName = file.originalFileName.replace(path.extname(file.originalFileName), `.${to}`);
     const outputFilePath = path.join(outputDir, outputFileName);
@@ -29,12 +29,12 @@ export const convertTo = async (to: FileType, file: FileLensUpload): Promise<{
         await result.file.save(outputFilePath);
 
         const mimeType = ["png", "jpg", "jpeg", "svg"].includes(to)
-        ? `image/${to}`
-        : to === "pdf"
-        ? "application/pdf"
-        : to === "docx"
-        ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        : "application/octet-stream";
+            ? `image/${to}`
+            : to === "pdf"
+                ? "application/pdf"
+                : to === "docx"
+                    ? "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    : "application/octet-stream";
 
         return {
             buffer: fs.readFileSync(outputFilePath),

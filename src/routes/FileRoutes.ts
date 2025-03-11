@@ -21,7 +21,18 @@ fileRoutes.post('/file/extract-data', upload.single('file'), async (req: Request
     if (!req.file) {
         res.status(400).json({ error: 'File not found' });
     }
-    fileController.extractData(req, res)
+    fileController.extractDataFromFile(req, res)
+})
+
+fileRoutes.post('/file/generate/f/text', async (req: Request, res: Response) => {
+    fileController.generateFileFromText(req, res)
+})
+
+fileRoutes.post('/file/generate/f/data', upload.single('file'), async (req: Request, res: Response) => {
+    if (!req.file) {
+        res.status(400).json({ error: 'File not found' });
+    }
+    fileController.generateFileFromData(req, res)
 })
 
 fileRoutes.post('/file/convert', upload.single('file'), async (req: Request, res: Response) => {

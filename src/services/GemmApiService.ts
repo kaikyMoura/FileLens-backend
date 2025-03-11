@@ -14,7 +14,7 @@ class GemmApiService {
             const uploadResponse = await fileManager.uploadFile(file.buffer, {
                 mimeType: file.mimetype,
                 displayName: 'File'
-            });
+            })
 
             const result = await model.generateContent([
                 question,
@@ -43,7 +43,6 @@ class GemmApiService {
             if (!file) {
                 throw new Error("REQUIRED_PROPERTIES_MISSING")
             }
-
             const result = await this.generateGeminiContent(file, "Extract only the raw text content from this file. Keep the original line breaks and text structure exactly as it appears. Do NOT add explanations, captions, or extra formatting. Return only the extracted text as plain text.")
 
             return {
