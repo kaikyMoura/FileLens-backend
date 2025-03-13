@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { ResponseModel } from '../model/ResponseModel';
 import userRepository from "../repositories/UserRepository";
 import generateToken from '../utils/token';
+import { CustomError } from '../model/CustomError';
+import { NextFunction } from 'express';
 
 const saltRounds = 10;
 class UserService {
@@ -71,38 +73,31 @@ class UserService {
     }
 
     async createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<ResponseModel<Omit<User, 'id' | 'user_avatar_options' | 'user_avatar_url' | 'user_password' | 'createdAt' | 'updatedAt' | 'tasks'>>> {
+        if (!user.user_name || !user.email) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request.")
+            
+        }
 
-        try {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
+            throw new CustomError("INVALID_CREDENTIALS", 401, "Please check your credentials before trying again.");
+        }
 
-            if (!user.user_name || !user.email) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
-            }
+        if (await userRepository.findUniqueByEmail(user.email)) {
+            throw new CustomError("USER_ALREADY_REGISTERED", 401, "Try logging in. If you don't remember your password, please use the 'Forgot password' option.")
+        }
 
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
-                throw new Error("INVALID_CREDENTIALS");
-            }
+        await userRepository.create({
+            id: uuidv4(),
+            user_name: user.user_name,
+            email: user.email,
+            user_password: await hash(user.user_password, saltRounds)
+        })
 
-            await userRepository.create({
-                id: uuidv4(),
+        return {
+            message: "User created successfully",
+            data: {
                 user_name: user.user_name,
                 email: user.email,
-                user_password: await hash(user.user_password, saltRounds)
-            })
-
-            return {
-                message: "User created successfully",
-                data: {
-                    user_name: user.user_name,
-                    email: user.email,
-                }
-            }
-        }
-        catch (err) {
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
             }
         }
     }
