@@ -39,16 +39,10 @@ class UserRepository {
     }
 
     async findUniqueByEmail(email: string): Promise<User> {
-        try {
-            const data = await prisma.user.findUnique({
-                where: { email: email, }
-            });
-            return data!;
-        }
-        catch (error) {
-            console.error(error)
-            throw new Error("Failed to retrieve user")
-        }
+        const data = await prisma.user.findUnique({
+            where: { email: email, }
+        });
+        return data!;
     }
 
     async findMany(): Promise<User[]> {

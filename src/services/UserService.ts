@@ -1,81 +1,59 @@
 import { User } from '@prisma/client';
 import { compare, hash } from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import { CustomError } from '../model/CustomError';
 import { ResponseModel } from '../model/ResponseModel';
 import userRepository from "../repositories/UserRepository";
 import generateToken from '../utils/token';
-import { CustomError } from '../model/CustomError';
-import { NextFunction } from 'express';
 
-const saltRounds = 10;
 class UserService {
+    
+    private saltRounds = 10;
 
     async retriveUserById(userId: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
-        try {
-            if (!userId) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
-            }
-
-            const retrivedUser = await userRepository.findUnique(userId)
-
-            if (!retrivedUser) {
-                throw new Error("USER_NOT_FOUND")
-            }
-
-            return {
-                data: {
-                    id: retrivedUser.id,
-                    user_name: retrivedUser.user_name,
-                    email: retrivedUser.email,
-                }
-            }
+        if (!userId) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
         }
-        catch (err) {
-            console.error(err)
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
+
+        const retrivedUser = await userRepository.findUnique(userId)
+
+        if (!retrivedUser) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found")
+        }
+
+        return {
+            data: {
+                id: retrivedUser.id,
+                user_name: retrivedUser.user_name,
+                email: retrivedUser.email,
             }
         }
     }
 
     async retrieveUserByCredentials(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<String> {
-        try {
-            if (!user || !user.email || !user.user_password) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
-            }
-
-            const retrivedUser = await userRepository.findUniqueByEmail(user.email)
-
-            if (!retrivedUser) {
-                throw new Error("USER_NOT_FOUND")
-            }
-
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) || retrivedUser.email != user.email || !await compare(user.user_password, retrivedUser.user_password)) {
-                throw new Error("INVALID_CREDENTIALS");
-            }
-
-            const token = generateToken(retrivedUser.id);
-
-            return token
+        if (!user || !user.email || !user.user_password) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
         }
-        catch (err) {
-            console.error(err)
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
-            }
+
+        const retrivedUser = await userRepository.findUniqueByEmail(user.email)
+
+        if (!retrivedUser) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found")
         }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) || retrivedUser.email != user.email || !await compare(user.user_password, retrivedUser.user_password)) {
+            throw new CustomError("INVALID_CREDENTIALS", 401, "Please check your credentials before trying again.");
+        }
+
+        const token = generateToken(retrivedUser.id);
+
+        return token
     }
 
     async createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<ResponseModel<Omit<User, 'id' | 'user_avatar_options' | 'user_avatar_url' | 'user_password' | 'createdAt' | 'updatedAt' | 'tasks'>>> {
         if (!user.user_name || !user.email) {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request.")
-            
+
         }
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email)) {
@@ -90,7 +68,7 @@ class UserService {
             id: uuidv4(),
             user_name: user.user_name,
             email: user.email,
-            user_password: await hash(user.user_password, saltRounds)
+            user_password: await hash(user.user_password, this.saltRounds)
         })
 
         return {
@@ -103,49 +81,27 @@ class UserService {
     }
 
     async deleteUser(id: string): Promise<ResponseModel<string>> {
-        try {
-
-            if (!await userRepository.findUnique(id)) {
-                throw new Error("NOT_FOUND")
-            }
-
-            await userRepository.remove(id)
-
-            return {
-                message: "User deleted with success."
-            }
+        if (!await userRepository.findUnique(id)) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found")
         }
-        catch (err) {
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
-            }
+
+        await userRepository.remove(id)
+
+        return {
+            message: "User deleted with success."
         }
     }
 
     async updateUser(id: string, user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) {
-        try {
-
-            if (!await userRepository.findUnique(id)) {
-                throw new Error("NOT_FOUND")
-            }
-
-            const response = await userRepository.update(id, user)
-
-            return {
-                message: "Task updated with success.",
-                data: response
-            }
+        if (!await userRepository.findUnique(id)) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found")
         }
-        catch (err) {
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
-            }
+
+        const response = await userRepository.update(id, user)
+
+        return {
+            message: "Task updated with success.",
+            data: response
         }
     }
 }

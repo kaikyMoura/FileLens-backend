@@ -4,13 +4,13 @@ import { GoogleAIFileManager } from "@google/generative-ai/server";
 import { ResponseModel } from "../model/ResponseModel";
 import path from "path";
 import { GenerateContentResult } from "@google/generative-ai";
+import { CustomError } from "../model/CustomError";
 
 class GemmApiService {
 
     protected async generateGeminiContent(file: FileLensUpload, question: string): Promise<GenerateContentResult> {
         const fileManager = new GoogleAIFileManager(model.apiKey);
 
-        try {
             const uploadResponse = await fileManager.uploadFile(file.buffer, {
                 mimeType: file.mimetype,
                 displayName: 'File'
@@ -25,23 +25,13 @@ class GemmApiService {
                     }
                 }
             ]);
+            
             return result
-        }
-        catch (err) {
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
-            }
-        }
     }
 
     async extractDataFromFile(file: FileLensUpload): Promise<ResponseModel<string>> {
-        try {
-
             if (!file) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
+                throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
             }
             const result = await this.generateGeminiContent(file, "Extract only the raw text content from this file. Keep the original line breaks and text structure exactly as it appears. Do NOT add explanations, captions, or extra formatting. Return only the extracted text as plain text.")
 
@@ -49,15 +39,6 @@ class GemmApiService {
                 data: result.response.text().trim()
             }
         }
-        catch (err) {
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
-            }
-        }
-    }
 }
 
 export default new GemmApiService()

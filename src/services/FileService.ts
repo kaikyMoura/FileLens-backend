@@ -1,9 +1,10 @@
-import { GetSignedUrlConfig, Storage } from '@google-cloud/storage';
+import { File, GetSignedUrlConfig, Storage } from '@google-cloud/storage';
 import FileLensUpload from '../model/FileLensUpload';
 import { ResponseModel } from '../model/ResponseModel';
 import userService from './UserService';
 import { createPdfFromText, createDocxFromText } from '../utils/generateFile';
 import gemmApiService from './GemmApiService';
+import { CustomError } from '../model/CustomError';
 
 
 
@@ -13,89 +14,65 @@ class FileService {
     private bucketName = "filelens_bucket"
 
     async uploadFileToGCS(file: FileLensUpload): Promise<ResponseModel<string>> {
-        try {
 
-            if (!file) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
-            }
-
-            const retrievedUser = await userService.retriveUserById(file.userId)
-
-            console.log(retrievedUser)
-
-            if (!retrievedUser) {
-                throw new Error("USER_NOT_FOUND")
-            }
-
-            const fileName = file.generateUniqueFileName()
-
-            const bucket = this.storage.bucket(this.bucketName).file(fileName)
-
-            const options: GetSignedUrlConfig = {
-                version: 'v4',
-                action: "read",
-                expires: Date.now() + 15 * 60 * 1000,
-            };
-
-            const [url] = await bucket.getSignedUrl(options);
-
-            await bucket.save(file.buffer, {
-                contentType: file.mimetype,
-                metadata: {
-                    cacheControl: 'public, max-age=31536000',
-                },
-            })
-
-            // image_url: `https://storage.googleapis.com/${bucketName}/${fileName}`,
-            return {
-                message: "File uploaded sucessfully",
-                data: url
-            }
+        if (!file) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request. Please verify the request and try again, or contact support for assistance.")
         }
-        catch (err) {
-            console.error(err)
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
-            }
+
+        const retrievedUser = await userService.retriveUserById(file.userId)
+
+        console.log(retrievedUser)
+
+        if (!retrievedUser) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found.")
+        }
+
+        const fileName = file.generateUniqueFileName()
+
+        const bucket = this.storage.bucket(this.bucketName).file(fileName)
+
+        const options: GetSignedUrlConfig = {
+            version: 'v4',
+            action: "read",
+            expires: Date.now() + 15 * 60 * 1000,
+        };
+
+        const [url] = await bucket.getSignedUrl(options);
+
+        await bucket.save(file.buffer, {
+            contentType: file.mimetype,
+            metadata: {
+                cacheControl: 'public, max-age=31536000',
+            },
+        }).catch(() => new CustomError("FILE_UPLOAD_ERROR", 401, "An Error occurred during the file upload process. Please verify the request and try again, or contact support for assistance."))
+
+        return {
+            message: "File uploaded sucessfully",
+            data: url
         }
     }
 
-    async retrieveFilesFromGCS(userId: string): Promise<ResponseModel<any>> {
-        try {
-            if (!userId) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
-            }
-
-            const retrievedUser = await userService.retriveUserById(userId)
-
-            if (!retrievedUser) {
-                throw new Error("USER_NOT_FOUND")
-            }
-            console.log(retrievedUser)
-
-            const [files] = await this.storage.bucket(this.bucketName).getFiles({
-                prefix: `user-${userId}/`
-            });
-
-            const fileData = files.map(file => ({
-                filePath: file.name,
-                fileId: file.id
-            }))
-            return {
-                data: fileData
-            }
+    async retrieveFilesFromGCS(userId: string): Promise<ResponseModel<unknown>> {
+        if (!userId) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request. Please verify the request and try again, or contact support for assistance.")
         }
-        catch (err) {
-            console.error(err)
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
-            }
+
+        const retrievedUser = await userService.retriveUserById(userId)
+
+        if (!retrievedUser) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found")
+        }
+
+        const [files] = await this.storage.bucket(this.bucketName).getFiles({
+            prefix: `user-${userId}/`
+        });
+
+        const fileData = files.map((file: File) => ({
+            filePath: file.name,
+            fileId: file.id
+        }))
+        return {
+            data: fileData
         }
     }
 
@@ -105,8 +82,8 @@ class FileService {
 
             const bucket = this.storage.bucket(this.bucketName).file(fileName)
 
-            await bucket.delete()
-
+            await bucket.delete().catch(() => new CustomError("FILE_NOT_FOUND", 404, "The requested file could not be found. Please verify the request and try again, or contact support for assistance."))
+            
             return true
         }
         catch (e) {
@@ -115,105 +92,76 @@ class FileService {
     }
 
     async generateFileFromText(type: string, text: string, fileTitle?: string) {
-        try {
-            if (!text || !type) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
-            }
-
-            let fileBuffer: Buffer | undefined;
-            let fileName: string;
-            let mimeType: string;
-
-            if (type === ".docx") {
-                fileBuffer = await createDocxFromText(text)
-                fileName = fileTitle ? `${fileTitle}` : "generated_file.docx";
-                mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            }
-
-            else if (type === '.pdf') {
-                fileBuffer = await createPdfFromText(text);
-                fileName = fileTitle ? `${fileTitle}` : "generated_file.pdf";
-                mimeType = 'application/pdf';
-            }
-            else {
-                throw new Error("INVALID_TYPE")
-            }
-
-
-            console.log(fileBuffer)
-
-            return {
-                data: {
-                    buffer: fileBuffer!,
-                    fileName: fileName,
-                    mimeType: mimeType
-
-                }
-            }
+        if (!text || !type) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request.")
         }
-        catch (err) {
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
+
+        let fileBuffer: Buffer | undefined;
+        let fileName: string;
+        let mimeType: string;
+
+        if (type === ".docx") {
+            fileBuffer = await createDocxFromText(text)
+            fileName = fileTitle ? `${fileTitle}` : "generated_file.docx";
+            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        }
+
+        else if (type === '.pdf') {
+            fileBuffer = await createPdfFromText(text);
+            fileName = fileTitle ? `${fileTitle}` : "generated_file.pdf";
+            mimeType = 'application/pdf';
+        }
+        else {
+            throw new CustomError("INVALID_TYPE", 400, "An invalid type was provided in the request. Please check the list of supported types and ensure you are using a valid option to generate the file.")
+        }
+
+        return {
+            data: {
+                buffer: fileBuffer!,
+                fileName: fileName,
+                mimeType: mimeType
+
             }
         }
     }
 
     async generateFileFromFileData(file: FileLensUpload, type: string) {
-
-        console.log(file)
-
-        try {
-            if (!file || !type) {
-                throw new Error("REQUIRED_PROPERTIES_MISSING")
-            }
-
-            if (file.mimetype === type) {
-                throw new Error("DUPLICATED_MIMETYPE")
-            }
-
-            const result = await gemmApiService.extractDataFromFile(file)
-
-            let fileBuffer: Buffer | undefined;
-            let fileName: string;
-            let mimeType: string;
-
-            if (type === ".docx") {
-                fileBuffer = await createDocxFromText(result.data!)
-                fileName = `${file.originalFileName.replace('.pdf', '.docx')}`;
-                mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            }
-
-            else if (type === 'pdf') {
-                console.log('aqui')
-                fileBuffer = await createPdfFromText(result.data!);
-                fileName = `${file.originalFileName.replace('.docx', 'pdf')}`;
-                mimeType = 'application/pdf';
-            }
-            else {
-                throw new Error("INVALID_TYPE")
-            }
-
-
-            console.log(fileBuffer)
-
-            return {
-                data: {
-                    buffer: fileBuffer!,
-                    fileName: fileName,
-                    mimeType: mimeType
-
-                }
-            }
+        if (!file || !type) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request.")
         }
-        catch (err) {
-            if (err instanceof Error) {
-                throw new Error(err.message)
-            }
-            else {
-                throw new Error("INTERNAL_SERVER_ERROR")
+
+        if (file.mimetype === type) {
+            throw new CustomError("DUPLICATED_MIMETYPE", 401, "Conversion between files of the same type is not allowed. Please choose a different target type to proceed.")
+        }
+
+        const result = await gemmApiService.extractDataFromFile(file)
+
+        let fileBuffer: Buffer | undefined;
+        let fileName: string;
+        let mimeType: string;
+
+        if (type === ".docx") {
+            fileBuffer = await createDocxFromText(result.data!)
+            fileName = `${file.originalFileName.replace('.pdf', '.docx')}`;
+            mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+        }
+
+        else if (type === 'pdf') {
+            console.log('aqui')
+            fileBuffer = await createPdfFromText(result.data!);
+            fileName = `${file.originalFileName.replace('.docx', 'pdf')}`;
+            mimeType = 'application/pdf';
+        }
+        else {
+            throw new CustomError("INVALID_TYPE", 400, "An invalid type was provided in the request. Please check the list of supported types and ensure you are using a valid option to generate the file.")
+        }
+
+        return {
+            data: {
+                buffer: fileBuffer!,
+                fileName: fileName,
+                mimeType: mimeType
+
             }
         }
     }

@@ -25,30 +25,11 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get("/", (req: Request, res: Response) => {
-    res.send("Welcome to the TaskList Service. See the documentation and learn how to use the endpoints")
+    res.send("Welcome to the FileLens Service. See the documentation and learn how to use the endpoints")
 });
 
 app.use('/api/v1', userRoutes, fileRoutes)
 
-app.use(errorMiddleware as unknown as express.ErrorRequestHandler)
-
-app.use((err: Error, _: Request, res: Response) => {
-
-    if (err instanceof CustomError) {
-        res.status(err.statusCode).json({
-            errorCode: err.statusCode,
-            errorMessage: err.message,
-            errorDescription: err.details,
-        });
-    }
-
-    console.error(err);
-
-    res.status(500).json({
-        errorCode: 'INTERNAL_SERVER_ERROR',
-        errorMessage: 'An unexpected error occurred.',
-        errorDescription: 'Please try again later or contact support if the issue persists.',
-    });
-});
+app.use(errorMiddleware)
 
 export default app;
