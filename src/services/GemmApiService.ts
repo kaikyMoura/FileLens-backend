@@ -36,6 +36,7 @@ class GemmApiService {
             const result = await this.generateGeminiContent(file, "Extract only the raw text content from this file. Keep the original line breaks and text structure exactly as it appears. Do NOT add explanations, captions, or extra formatting. Return only the extracted text as plain text.")
 
             return {
+                message: "Data extracted successfully.",
                 data: result.response.text().trim()
             }
         }

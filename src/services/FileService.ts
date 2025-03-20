@@ -11,7 +11,7 @@ import { CustomError } from '../model/CustomError';
 class FileService {
 
     private storage = new Storage({ keyFilename: process.env.GOOGLE_APLICATION_CREDENTIALS });
-    private bucketName = "filelens_bucket"
+    private bucketName = process.env.GOOGLE_BUCKET_NAME!
 
     async uploadFileToGCS(file: FileLensUpload): Promise<ResponseModel<string>> {
 
@@ -19,9 +19,7 @@ class FileService {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request. Please verify the request and try again, or contact support for assistance.")
         }
 
-        const retrievedUser = await userService.retriveUserById(file.userId)
-
-        console.log(retrievedUser)
+        const retrievedUser = await userService.retrieveUserById(file.userId)
 
         if (!retrievedUser) {
             throw new CustomError("USER_NOT_FOUND", 404, "User not found.")
@@ -57,7 +55,7 @@ class FileService {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request. Please verify the request and try again, or contact support for assistance.")
         }
 
-        const retrievedUser = await userService.retriveUserById(userId)
+        const retrievedUser = await userService.retrieveUserById(userId)
 
         if (!retrievedUser) {
             throw new CustomError("USER_NOT_FOUND", 404, "User not found")
@@ -147,7 +145,6 @@ class FileService {
         }
 
         else if (type === 'pdf') {
-            console.log('aqui')
             fileBuffer = await createPdfFromText(result.data!);
             fileName = `${file.originalFileName.replace('.docx', 'pdf')}`;
             mimeType = 'application/pdf';

@@ -11,7 +11,7 @@ class UserService {
 
     private saltRounds = 10;
 
-    async retriveUserByEmail(email: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
+    async retrieveUserByEmail(email: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
         if (!email) {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
         }
@@ -31,7 +31,7 @@ class UserService {
         }
     }
 
-    async retriveUserById(userId: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
+    async retrieveUserById(userId: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
         if (!userId) {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
         }
@@ -51,7 +51,7 @@ class UserService {
         }
     }
 
-    async generateTokenByUserCrendential(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<ResponseModel<{ token: string, expiresIn: string }>> {
+    async generateTokenByUserCrendential(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt'>): Promise<ResponseModel<{ token: string, expiresIn: string }>> {
         if (!user || !user.email || !user.user_password) {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
         }
@@ -66,7 +66,7 @@ class UserService {
             throw new CustomError("INVALID_CREDENTIALS", 401, "Please check your credentials before trying again.");
         }
 
-        const data = await generateToken(retrivedUser.id);
+        const data = await generateToken(retrivedUser);
 
         return {
             data: {

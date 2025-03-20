@@ -5,6 +5,7 @@ import path from 'path';
 import errorHandler from './middlewares/errorHandler';
 import fileRoutes from './routes/FileRoutes';
 import userRoutes from './routes/UserRoutes';
+import bodyParser from 'body-parser'
 
 const app = express();
 
@@ -17,6 +18,8 @@ app.use(cors({
     credentials: true,
     optionsSuccessStatus: 200
 }))
+
+app.use(bodyParser.json())
 
 app.use(logger('combined'));
 app.use(express.json());

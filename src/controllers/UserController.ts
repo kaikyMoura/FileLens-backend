@@ -39,9 +39,7 @@ class UserController {
         const { email } = req.body
         const { token } = req.headers
 
-        const userId = (await userService.retriveUserByEmail(email)).data?.id
-
-        const result = await renewToken(userId!, token?.toString()!)
+        const result = await renewToken(email, token?.toString()!)
 
         return res.status(200).json(result)
     }

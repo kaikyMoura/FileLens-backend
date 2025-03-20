@@ -1,16 +1,20 @@
+import { User } from "@prisma/client";
 import { CustomError } from "../model/CustomError";
 import { ResponseModel } from "../model/ResponseModel";
+import userService from "../services/UserService";
 
-var jwt = require('jsonwebtoken');
+import jwt, { Secret } from 'jsonwebtoken';
 
-async function generateToken(userId: string): Promise<{ token: string, expiresIn: string }> {
-    const payload = { id: userId };
-    const secretKey = process.env.JWT_SECRET_KEY || 'secret';
+async function generateToken(user: Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>): Promise<{ token: string, expiresIn: string }> {
+
+    const secretKey: Secret = process.env.JWT_SECRET_KEY!;
     const options = {
-        expiresIn: process.env.JWT_EXPIRATION_TIME || '1h'
+        expiresIn: '1 hour',
     };
 
-    const token = jwt.sign(payload, secretKey, options);
+    const token = jwt.sign({ _id: user.id, name: user.user_name, email: user.email }, secretKey, {
+        expiresIn: '1 hour',
+    });
 
     return {
         token: token,
@@ -18,10 +22,11 @@ async function generateToken(userId: string): Promise<{ token: string, expiresIn
     }
 }
 
-async function renewToken(userId: string, currentToken: string): Promise<ResponseModel<{ token: string, expiresIn: string }>> {
-    if (!userId || !currentToken) {
+async function renewToken(email: string, currentToken: string): Promise<ResponseModel<{ token: string, expiresIn: string }>> {
+    if (!email || !currentToken) {
         throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.");
     }
+    const user = await userService.retrieveUserByEmail(email)
 
     const decodedToken = jwt.decode(currentToken) as { expiration: number };
     const currentTime = Math.floor(Date.now() / 1000);
@@ -30,7 +35,7 @@ async function renewToken(userId: string, currentToken: string): Promise<Respons
         throw new CustomError("TOKEN_NOT_EXPIRING", 400, "Token is not close to expiring");
     }
 
-    const data = await generateToken(userId);
+    const data = await generateToken(user.data!);
 
     return {
         data: {

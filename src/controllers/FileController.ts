@@ -1,7 +1,8 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 import FileLensUpload from '../model/FileLensUpload';
 import fileService from '../services/FileService';
 import gemmAiService from '../services/GemmApiService';
+import userService from '../services/UserService';
 import { convertTo } from './../utils/fileUtils';
 
 class FileController {
@@ -42,6 +43,7 @@ class FileController {
 
     async generateFileFromData(req: Request, res: Response) {
         const { buffer, mimetype, originalname } = req.file!
+
         const { type, userId } = req.body
 
         const result = await fileService.generateFileFromFileData(new FileLensUpload(userId, buffer, mimetype, originalname), type)
@@ -53,9 +55,13 @@ class FileController {
     }
 
     async uploadFile(req: Request, res: Response) {
+        console.log(req.file)
         const { buffer, mimetype, originalname } = req.file!;
-        const { userId } = req.params;
+        const { email } = req.body;
+        
+        console.log(buffer)
 
+        const userId = (await userService.retrieveUserByEmail(email)).data?.id!
         const fileLensUpload = new FileLensUpload(userId, buffer, mimetype, originalname);
 
         const response = await fileService.uploadFileToGCS(fileLensUpload)
@@ -65,7 +71,9 @@ class FileController {
 
 
     async retriveUserFiles(req: Request, res: Response) {
-        const { userId } = req.params;
+        const { email } = req.body;
+
+        const userId = (await userService.retrieveUserByEmail(email)).data?.id!
 
         return res.status(200).json(await fileService.retrieveFilesFromGCS(userId))
     }

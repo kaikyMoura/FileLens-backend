@@ -12,7 +12,7 @@ fileRoutes.get('/file/user/:userId', authenticateToken, async (req, res) => {
     await fileController.retriveUserFiles(req, res)
 })
 
-fileRoutes.post('/file/upload/:userId', authenticateToken, upload.single('file'), async (req, res) => {
+fileRoutes.post('/file/upload', authenticateToken, upload.single('file'), async (req, res) => {
     if (!req.file) {
         res.status(400).json({ error: new CustomError("FILE_NOT_FOUND", 404, "The requested file could not be found. Please verify the request and try again, or contact support for assistance.") });
     }
