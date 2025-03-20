@@ -8,17 +8,14 @@ import jwt, { Secret } from 'jsonwebtoken';
 async function generateToken(user: Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>): Promise<{ token: string, expiresIn: string }> {
 
     const secretKey: Secret = process.env.JWT_SECRET_KEY!;
-    const options = {
-        expiresIn: '1 hour',
-    };
 
     const token = jwt.sign({ _id: user.id, name: user.user_name, email: user.email }, secretKey, {
-        expiresIn: '1 hour',
+        expiresIn: '1 day',
     });
 
     return {
         token: token,
-        expiresIn: options.expiresIn
+        expiresIn: '1 day'
     }
 }
 
