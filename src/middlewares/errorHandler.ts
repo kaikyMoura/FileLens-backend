@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { CustomError } from "../model/CustomError";
 
-export default function errorMiddleware(err: any, req: Request, res: Response, next: NextFunction) {
+export default function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
     console.error("Error: ", err)
 
     if (err instanceof CustomError) {

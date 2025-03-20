@@ -1,13 +1,14 @@
 import { User } from '@prisma/client';
 import { compare, hash } from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { CustomError } from '../model/CustomError';
 import { ResponseModel } from '../model/ResponseModel';
 import userRepository from "../repositories/UserRepository";
-import generateToken from '../utils/token';
+import { generateToken } from '../utils/token';
 
 class UserService {
-    
+
     private saltRounds = 10;
 
     async retriveUserById(userId: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
@@ -30,7 +31,7 @@ class UserService {
         }
     }
 
-    async retrieveUserByCredentials(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<String> {
+    async retrieveUserByCredentials(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<{ token: string, expiresIn: string }> {
         if (!user || !user.email || !user.user_password) {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
         }
@@ -45,14 +46,17 @@ class UserService {
             throw new CustomError("INVALID_CREDENTIALS", 401, "Please check your credentials before trying again.");
         }
 
-        const token = generateToken(retrivedUser.id);
+        const data = await generateToken(retrivedUser.id);
 
-        return token
+        return {
+            token: data.token,
+            expiresIn: data.expiresIn
+        }
     }
 
     async createUser(user: Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<ResponseModel<Omit<User, 'id' | 'user_avatar_options' | 'user_avatar_url' | 'user_password' | 'createdAt' | 'updatedAt' | 'tasks'>>> {
         if (!user.user_name || !user.email) {
-            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 400, "Some required properties are missing from the request.")
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
 
         }
 

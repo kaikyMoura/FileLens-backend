@@ -1,11 +1,10 @@
-import express, { NextFunction, Request, Response } from 'express';
+import cors from 'cors';
+import express, { Request, Response } from 'express';
 import logger from 'morgan';
 import path from 'path';
+import errorHandler from './middlewares/errorHandler';
 import fileRoutes from './routes/FileRoutes';
 import userRoutes from './routes/UserRoutes';
-import cors from 'cors';
-import { CustomError } from './model/CustomError';
-import errorMiddleware from './middlewares/errorMidleware';
 
 const app = express();
 
@@ -30,6 +29,6 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use('/api/v1', userRoutes, fileRoutes)
 
-app.use(errorMiddleware)
+app.use(errorHandler)
 
 export default app;
