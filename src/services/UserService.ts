@@ -11,6 +11,26 @@ class UserService {
 
     private saltRounds = 10;
 
+    async retriveUserByEmail(email: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
+        if (!email) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
+        }
+
+        const retrivedUser = await userRepository.findUniqueByEmail(email)
+
+        if (!retrivedUser) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found")
+        }
+
+        return {
+            data: {
+                id: retrivedUser.id,
+                user_name: retrivedUser.user_name,
+                email: retrivedUser.email,
+            }
+        }
+    }
+
     async retriveUserById(userId: string): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt'>>> {
         if (!userId) {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
@@ -31,7 +51,7 @@ class UserService {
         }
     }
 
-    async retrieveUserByCredentials(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<{ token: string, expiresIn: string }> {
+    async generateTokenByUserCrendential(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<ResponseModel<{ token: string, expiresIn: string }>> {
         if (!user || !user.email || !user.user_password) {
             throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
         }
@@ -49,8 +69,34 @@ class UserService {
         const data = await generateToken(retrivedUser.id);
 
         return {
-            token: data.token,
-            expiresIn: data.expiresIn
+            data: {
+                token: data.token,
+                expiresIn: data.expiresIn
+            }
+        }
+    }
+
+    async retrieveUserByCredentials(user: Omit<User, 'id' | 'user_name' | 'createdAt' | 'updatedAt' | 'tasks'>): Promise<ResponseModel<Omit<User, 'user_password' | 'createdAt' | 'updatedAt' | 'tasks'>>> {
+        if (!user || !user.email || !user.user_password) {
+            throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.")
+        }
+
+        const retrivedUser = await userRepository.findUniqueByEmail(user.email)
+
+        if (!retrivedUser) {
+            throw new CustomError("USER_NOT_FOUND", 404, "User not found")
+        }
+
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.email) || retrivedUser.email != user.email || !await compare(user.user_password, retrivedUser.user_password)) {
+            throw new CustomError("INVALID_CREDENTIALS", 401, "Please check your credentials before trying again.");
+        }
+
+        return {
+            data: {
+                id: retrivedUser.id,
+                user_name: retrivedUser.user_name,
+                email: retrivedUser.email,
+            }
         }
     }
 

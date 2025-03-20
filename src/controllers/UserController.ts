@@ -1,13 +1,15 @@
 import { Request, Response } from "express";
 import userService from "../services/UserService";
+import { renewToken } from "../utils/token";
 
 class UserController {
 
     async login(req: Request, res: Response) {
         const user = req.body;
 
-        const result = await userService.retrieveUserByCredentials(user)
-        return res.status(200).json({ token: result })
+        const result = await userService.generateTokenByUserCrendential(user)
+
+        return res.status(200).json(result.data)
     }
 
     async createUser(req: Request, res: Response) {
@@ -29,6 +31,17 @@ class UserController {
         const user = req.body
 
         const result = await userService.updateUser(id, user)
+
+        return res.status(200).json(result)
+    }
+
+    async renewToken(req: Request, res: Response) {
+        const { email } = req.body
+        const { token } = req.headers
+
+        const userId = (await userService.retriveUserByEmail(email)).data?.id
+
+        const result = await renewToken(userId!, token?.toString()!)
 
         return res.status(200).json(result)
     }

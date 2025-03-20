@@ -20,4 +20,8 @@ userRoutes.put('/user/update/:user_id', authenticateToken, async (req, res) => {
     await userController.updateUser(req, res);
 });
 
+userRoutes.post('/user/renew-token', authenticateToken, async (req, res) => {
+    await userController.renewToken(req, res);
+})
+
 export default userRoutes;

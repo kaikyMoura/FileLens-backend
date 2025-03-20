@@ -1,12 +1,13 @@
 import { CustomError } from "../model/CustomError";
+import { ResponseModel } from "../model/ResponseModel";
 
 var jwt = require('jsonwebtoken');
 
 async function generateToken(userId: string): Promise<{ token: string, expiresIn: string }> {
     const payload = { id: userId };
-    const secretKey = process.env.JWT_SECRET_KEY || 'your-secret-key';
+    const secretKey = process.env.JWT_SECRET_KEY || 'secret';
     const options = {
-        expiresIn: '1h'
+        expiresIn: process.env.JWT_EXPIRATION_TIME || '1h'
     };
 
     const token = jwt.sign(payload, secretKey, options);
@@ -17,7 +18,7 @@ async function generateToken(userId: string): Promise<{ token: string, expiresIn
     }
 }
 
-async function renewToken(userId: string, currentToken: string): Promise<{ token: string, expiresIn: string }> {
+async function renewToken(userId: string, currentToken: string): Promise<ResponseModel<{ token: string, expiresIn: string }>> {
     if (!userId || !currentToken) {
         throw new CustomError("REQUIRED_PROPERTIES_MISSING", 401, "Some required properties are missing from the request.");
     }
@@ -32,8 +33,10 @@ async function renewToken(userId: string, currentToken: string): Promise<{ token
     const data = await generateToken(userId);
 
     return {
-        token: data.token,
-        expiresIn: data.expiresIn
+        data: {
+            token: data.token,
+            expiresIn: data.expiresIn
+        }
     };
 }
 
