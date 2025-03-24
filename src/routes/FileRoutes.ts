@@ -6,7 +6,8 @@ import authenticateToken from '../middlewares/authenticateToken';
 
 const fileRoutes = Router()
 
-const upload = multer({ storage: multer.memoryStorage() });
+const storage = multer.memoryStorage();
+const upload = multer({ storage });
 
 fileRoutes.get('/file/user/:userId', authenticateToken, async (req, res) => {
     await fileController.retriveUserFiles(req, res)

@@ -1,6 +1,6 @@
-import app from '../src/app';
-import http from 'http';
 import debugLib from 'debug';
+import http from 'http';
+import app from '../src/app';
 
 const debug = debugLib('myapp:server');
 const PORT = process.env.PORT || 5000;

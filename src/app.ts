@@ -5,7 +5,6 @@ import path from 'path';
 import errorHandler from './middlewares/errorHandler';
 import fileRoutes from './routes/FileRoutes';
 import userRoutes from './routes/UserRoutes';
-import bodyParser from 'body-parser'
 
 const app = express();
 
@@ -19,12 +18,13 @@ app.use(cors({
     optionsSuccessStatus: 200
 }))
 
-app.use(bodyParser.json())
-
-app.use(logger('combined'));
 app.use(express.json());
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
+
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.use(logger('combined'));
+
 
 app.get("/", (req: Request, res: Response) => {
     res.send("Welcome to the FileLens Service. See the documentation and learn how to use the endpoints")

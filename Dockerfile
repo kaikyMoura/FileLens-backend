@@ -1,8 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG NODE_VERSION=20.10.0
-
-FROM node:${NODE_VERSION}-alpine as base
+FROM node:22.14.0-alpine as base
 WORKDIR /app
 
 # Install pnpm globally
@@ -23,8 +21,6 @@ RUN pnpm install --frozen-lockfile
 
 COPY . . 
 
-RUN pnpm run build
-
 FROM base as final
 
 WORKDIR /app
@@ -35,9 +31,6 @@ USER node
 
 COPY .env .env
 
-RUN pnpm prisma migrate deploy
-RUN pnpm prisma generate
-
 EXPOSE 5000
 
-CMD ["pnpm", "start"]
+CMD ["sh", "-c", "pnpm run build && pnpm run dev"]

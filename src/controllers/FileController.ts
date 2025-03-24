@@ -30,8 +30,6 @@ class FileController {
     async generateFileFromText(req: Request, res: Response) {
         const { type, text, fileTitle } = req.body
 
-        console.log(req.body)
-
         const result = await fileService.generateFileFromText(type, text, fileTitle)
 
         res.setHeader('Content-Disposition', `attachment; filename="${result!.data.fileName}"`);
@@ -55,12 +53,9 @@ class FileController {
     }
 
     async uploadFile(req: Request, res: Response) {
-        console.log(req.file)
         const { buffer, mimetype, originalname } = req.file!;
         const { email } = req.body;
         
-        console.log(buffer)
-
         const userId = (await userService.retrieveUserByEmail(email)).data?.id!
         const fileLensUpload = new FileLensUpload(userId, buffer, mimetype, originalname);
 
