@@ -29,6 +29,6 @@ COPY --from=build /app/ ./
 RUN chown -R node:node /app
 USER node
 
-EXPOSE 5000
+EXPOSE 8080
 
 CMD ["sh", "-c", "pnpm run build && pnpm run dev"]
