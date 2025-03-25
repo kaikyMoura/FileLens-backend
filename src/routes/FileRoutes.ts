@@ -17,7 +17,8 @@ fileRoutes.post('/file/upload', authenticateToken, upload.single('file'), async 
     if (!req.file) {
         res.status(400).json({ error: new CustomError("FILE_NOT_FOUND", 404, "The requested file could not be found. Please verify the request and try again, or contact support for assistance.") });
     }
-    await fileController.uploadFile(req, res)
+
+    await fileController.uploadFile(req, res);
 });
 
 fileRoutes.post('/file/extract-data', authenticateToken, upload.single('file'), async (req, res) => {

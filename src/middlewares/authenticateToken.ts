@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
+import jwt, { TokenExpiredError } from "jsonwebtoken";
 import { CustomError } from "../model/CustomError";
 import { renewToken } from "../utils/token";
-import jwt, { TokenExpiredError, verify } from "jsonwebtoken";
 
 const handleTokenRenewal = async (email: string, token: string, res: Response, req: Request) => {
     try {
@@ -15,7 +15,7 @@ const handleTokenRenewal = async (email: string, token: string, res: Response, r
         return true;
     } catch (error) {
         if (error instanceof CustomError && error.message === "TOKEN_NOT_EXPIRING") {
-            console.log(error.details);
+            console.error(error.details);
             return true;
         }
         console.error("Error renewing token:", error);
@@ -27,7 +27,7 @@ const handleTokenRenewal = async (email: string, token: string, res: Response, r
 }
 
 
-export default async function authenticateToken(req: Request, res: Response, next: NextFunction) {
+export default async function authenticateToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
     if (!token) {
@@ -40,24 +40,27 @@ export default async function authenticateToken(req: Request, res: Response, nex
 
         const tokenRenewed = await handleTokenRenewal(decoded.email, token, res, req);
         if (tokenRenewed) {
-            req.body = decoded;
-            next();
+            (req as any).user = decoded;
+            return next();
         }
-        req.body = decoded;
-        next();
+        (req as any).user = decoded;
+        return next();
     } catch (err) {
         if (err instanceof TokenExpiredError) {
+            console.error(err);
+
+            // Decode the token to get the email of the user and renew the token
             const decoded = jwt.decode(token) as { email: string };
 
             const tokenRenewed = await handleTokenRenewal(decoded.email, token, res, req);
             if (tokenRenewed) {
-                req.body = decoded;
-                next();
+                (req as any).user = decoded;
+                return next();
             }
         } else {
             console.error(err);
             res.status(403).json({ message: 'Invalid token' });
+            return;
         }
-
     }
 }

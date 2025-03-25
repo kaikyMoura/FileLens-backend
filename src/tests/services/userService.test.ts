@@ -1,6 +1,6 @@
 jest.useRealTimers()
 
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
 import { config } from "dotenv";
 import userService from '../../services/UserService';
@@ -11,13 +11,13 @@ config({ path: '.env.test' })
 
 
 describe('Testing user service operations', () => {
-    beforeEach(async () => {
-        try {
-            await prisma.user.deleteMany();
-        } catch (error) {
-            console.error('Erro connecting to database: ' + error);
-        }
-    });
+    // beforeEach(async () => {
+    //     try {
+    //         await prisma.user.deleteMany();
+    //     } catch (error) {
+    //         console.error('Erro connecting to database: ' + error);
+    //     }
+    // });
 
     afterAll(async () => {
         await prisma.$disconnect()

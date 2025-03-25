@@ -13,7 +13,7 @@ const environment = process.env.NODE_ENV || 'dev'
 console.log(`Environment: ${environment}`);
 
 app.use(cors({
-    origin: 'http://localhost:3000',
+    origin: '*',
     credentials: true,
     optionsSuccessStatus: 200
 }))
