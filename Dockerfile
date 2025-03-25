@@ -31,4 +31,4 @@ USER node
 
 EXPOSE 8080
 
-CMD ["sh", "-c", "pnpm run build && pnpm run dev"]
+CMD ["sh", "-c", "pnpm run build && pnpm run start"]
