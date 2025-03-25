@@ -3,7 +3,7 @@ import http from 'http';
 import app from '../src/app';
 
 const debug = debugLib('myapp:server');
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 
 const normalizePort = (val: string): number | string | boolean => {
   const port = parseInt(val, 10);
