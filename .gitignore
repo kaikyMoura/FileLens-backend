@@ -4,7 +4,7 @@ node_modules
 .env.test
 .env
 
-.vs-code
+.vscode
 
 credentials.json
 .vercel
