@@ -10,7 +10,7 @@ import { CustomError } from '../model/CustomError';
 
 class FileService {
 
-    private storage = new Storage({ keyFilename: process.env.GOOGLE_APLICATION_CREDENTIALS });
+    private storage = new Storage();
     private bucketName = process.env.GOOGLE_BUCKET_NAME!
 
     async uploadFileToGCS(file: FileLensUpload): Promise<ResponseModel<string>> {
