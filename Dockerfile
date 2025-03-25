@@ -29,8 +29,6 @@ COPY --from=build /app/ ./
 RUN chown -R node:node /app
 USER node
 
-COPY .env .env
-
 EXPOSE 5000
 
 CMD ["sh", "-c", "pnpm run build && pnpm run dev"]
