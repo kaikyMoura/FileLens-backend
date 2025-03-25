@@ -1,0 +1,21 @@
+name: Run Docker Compose
+
+on: [push]
+
+jobs:
+  run-compose:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v4
+
+      - name: Build and Start
+        run: |
+          docker compose -f docker-compose.yml up -d
+          
+      - name: Wait until the service is ready
+        run: sleep 10
+
+      - name: Stop and remove container
+        run: docker compose down
