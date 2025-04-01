@@ -15,7 +15,8 @@ console.log(`Environment: ${environment}`);
 app.use(cors({
     origin: '*',
     credentials: true,
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
+    exposedHeaders: ["Content-Disposition", "Content-Type"]
 }))
 
 app.use(express.json());
