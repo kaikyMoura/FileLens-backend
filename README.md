@@ -104,5 +104,5 @@ The deployment is done using Google Cloud Run and Cloud Build, which allows you 
 - [Google Cloud Build](https://cloud.google.com/build)
 
 
-Author 👨‍💻
+#### Author 👨‍💻
 Kaiky Tupinambá - Fullstack developer
